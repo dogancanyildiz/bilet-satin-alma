@@ -1,0 +1,27 @@
+# macOS sistem dosyaları
+.DS_Store
+
+# PHP & Composer
+/vendor
+composer.lock
+
+# Ortam değişkenleri
+.env
+
+# SQLite veritabanı dosyası
+storage/*
+!storage/.gitkeep
+
+# Docker context
+.dockerignore
+
+# Log ve cache dosyaları
+*.log
+*.cache
+
+# VS Code ayarları
+.vscode/
+
+# Node / Frontend (ileride eklenirse)
+node_modules/
+dist/
