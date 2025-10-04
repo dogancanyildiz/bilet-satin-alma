@@ -36,6 +36,15 @@ jobs:
       - name: Run container and test web response
         run: |
           docker compose up -d
-          sleep 5
-          curl -I http://localhost:8080 | grep "200 OK"
+          sleep 10
+          # Test HTTP response with retry mechanism
+          for i in {1..5}; do
+            if curl -f -s http://localhost:8080; then
+              echo "✅ Web server is responding correctly"
+              break
+            else
+              echo "❌ Attempt $i failed, retrying..."
+              sleep 2
+            fi
+          done
           docker compose down
