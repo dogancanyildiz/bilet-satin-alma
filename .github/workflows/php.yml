@@ -32,3 +32,10 @@ jobs:
 
       - name: Validate Docker Compose config
         run: docker compose config
+
+      - name: Run container and test web response
+        run: |
+          docker compose up -d
+          sleep 5
+          curl -I http://localhost:8080 | grep "200 OK"
+          docker compose down
