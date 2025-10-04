@@ -25,3 +25,6 @@ storage/*
 # Node / Frontend (ileride eklenirse)
 node_modules/
 dist/
+
+# Docs Klasörü
+docs/
