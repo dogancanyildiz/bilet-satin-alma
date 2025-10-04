@@ -2,9 +2,11 @@ name: PHP Lint & Build
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   pull_request:
-    branches: [ "main" ]
+    branches:
+      - main
 
 jobs:
   build:
@@ -27,3 +29,6 @@ jobs:
 
       - name: Build Docker image
         run: docker build -t bilet-satin-alma .
+
+      - name: Validate Docker Compose config
+        run: docker compose config
