@@ -52,7 +52,7 @@ function login($email, $password) {
 /**
  * Kullanıcı kaydı
  */
-function register($fullName, $email, $password, $role = 'user', $companyId = null) {
+function register($fullName, $email, $password, $phone = null, $birthDate = null, $gender = null, $role = 'user', $companyId = null) {
     try {
         $pdo = db();
         
@@ -70,10 +70,22 @@ function register($fullName, $email, $password, $role = 'user', $companyId = nul
         $userId = $role . '_' . uniqid();
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         $balance = ($role === 'user') ? 500 : 1000; // Yeni kullanıcılara başlangıç kredisi
+        $sanitizedPhone = $phone ? preg_replace('/\D+/', '', $phone) : null;
         
-        $stmt = $pdo->prepare("INSERT INTO users (id, full_name, email, role, password, company_id, balance) 
-                              VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$userId, $fullName, $email, $role, $hashedPassword, $companyId, $balance]);
+        $stmt = $pdo->prepare("INSERT INTO users (id, full_name, email, role, password, company_id, balance, phone, birth_date, gender) 
+                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([
+            $userId,
+            $fullName,
+            $email,
+            $role,
+            $hashedPassword,
+            $companyId,
+            $balance,
+            $sanitizedPhone,
+            $birthDate,
+            $gender
+        ]);
         
         return [
             'success' => true,
@@ -124,6 +136,18 @@ function getCurrentUser() {
     ];
 }
 
+function getUserById($userId) {
+    try {
+        $pdo = db();
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+    } catch (PDOException $e) {
+        error_log("Fetch user error: " . $e->getMessage());
+        return null;
+    }
+}
+
 /**
  * Kullanıcı rolü kontrolü
  */
@@ -134,12 +158,14 @@ function hasRole($requiredRole) {
     
     $userRole = $_SESSION['user_role'];
     
-    // Admin her şeye erişebilir
     if ($userRole === 'admin') {
         return true;
     }
-    
-    // Rol kontrolü
+
+    if (is_array($requiredRole)) {
+        return in_array($userRole, $requiredRole);
+    }
+
     return $userRole === $requiredRole;
 }
 
@@ -147,11 +173,7 @@ function hasRole($requiredRole) {
  * Çoklu rol kontrolü
  */
 function hasAnyRole($roles) {
-    if (!isLoggedIn()) {
-        return false;
-    }
-    
-    return in_array($_SESSION['user_role'], $roles);
+    return hasRole($roles);
 }
 
 /**
@@ -167,9 +189,16 @@ function requireAuth($redirectTo = '/login') {
 /**
  * Rol kontrolü middleware
  */
-function requireRole($role, $redirectTo = '/') {
+function requireRole($roles, $redirectTo = '/') {
     requireAuth();
-    if (!hasRole($role)) {
+    $rolesToCheck = is_array($roles) ? $roles : [$roles];
+
+    $currentRole = $_SESSION['user_role'] ?? null;
+    if ($currentRole === 'admin') {
+        return;
+    }
+
+    if (!in_array($currentRole, $rolesToCheck, true)) {
         header("Location: $redirectTo");
         exit;
     }

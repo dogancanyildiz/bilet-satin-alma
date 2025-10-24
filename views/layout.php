@@ -45,12 +45,13 @@
                         <li class="nav-item">
                             <a class="nav-link" href="/my-tickets"><i class="fas fa-ticket-alt"></i> Biletlerim</a>
                         </li>
-                        <?php if (hasRole('company_admin')): ?>
+                        <?php $navUser = getCurrentUser(); ?>
+                        <?php if ($navUser && $navUser['role'] === 'company_admin'): ?>
                             <li class="nav-item">
                                 <a class="nav-link" href="/company-panel"><i class="fas fa-cogs"></i> Firma Paneli</a>
                             </li>
                         <?php endif; ?>
-                        <?php if (hasRole('admin')): ?>
+                        <?php if ($navUser && $navUser['role'] === 'admin'): ?>
                             <li class="nav-item">
                                 <a class="nav-link" href="/admin-panel"><i class="fas fa-shield-alt"></i> Admin Paneli</a>
                             </li>
@@ -64,13 +65,13 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                                 <i class="fas fa-user"></i> <?= htmlspecialchars($user['name']) ?>
-                                <?php if ($user['role'] === 'user'): ?>
+                                <?php if (in_array($user['role'], ['user', 'company_admin'], true)): ?>
                                     <span class="balance-badge"><?= number_format($user['balance'], 2) ?> ₺</span>
                                 <?php endif; ?>
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="/profile"><i class="fas fa-user-edit"></i> Profilim</a></li>
-                                <?php if ($user['role'] === 'user'): ?>
+                                <?php if (in_array($user['role'], ['user', 'company_admin'], true)): ?>
                                     <li><a class="dropdown-item" href="/my-tickets"><i class="fas fa-ticket-alt"></i> Biletlerim</a></li>
                                 <?php endif; ?>
                                 <li><hr class="dropdown-divider"></li>

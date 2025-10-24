@@ -57,7 +57,7 @@ $content = '
                         <div class="card-body">
                             <h5 class="card-title">İstanbul → Ankara</h5>
                             <p class="card-text text-muted">50₺\'den başlayan fiyatlarla</p>
-                            <a href="/search?departure_city=İstanbul&arrival_city=Ankara&departure_date=' . date('Y-m-d') . '" class="btn btn-outline-primary btn-sm">Bilet Ara</a>
+                            <a href="/search?departure_city=İstanbul&arrival_city=Ankara&departure_date=' . date('Y-m-d', strtotime('+1 day')) . '" class="btn btn-outline-primary btn-sm">Bilet Ara</a>
                         </div>
                     </div>
                 </div>
@@ -66,7 +66,7 @@ $content = '
                         <div class="card-body">
                             <h5 class="card-title">Ankara → İzmir</h5>
                             <p class="card-text text-muted">75₺\'den başlayan fiyatlarla</p>
-                            <a href="/search?departure_city=Ankara&arrival_city=İzmir&departure_date=' . date('Y-m-d') . '" class="btn btn-outline-primary btn-sm">Bilet Ara</a>
+                            <a href="/search?departure_city=Ankara&arrival_city=İzmir&departure_date=' . date('Y-m-d', strtotime('+1 day')) . '" class="btn btn-outline-primary btn-sm">Bilet Ara</a>
                         </div>
                     </div>
                 </div>
@@ -75,7 +75,7 @@ $content = '
                         <div class="card-body">
                             <h5 class="card-title">İstanbul → İzmir</h5>
                             <p class="card-text text-muted">60₺\'den başlayan fiyatlarla</p>
-                            <a href="/search?departure_city=İstanbul&arrival_city=İzmir&departure_date=' . date('Y-m-d') . '" class="btn btn-outline-primary btn-sm">Bilet Ara</a>
+                            <a href="/search?departure_city=İstanbul&arrival_city=İzmir&departure_date=' . date('Y-m-d', strtotime('+1 day')) . '" class="btn btn-outline-primary btn-sm">Bilet Ara</a>
                         </div>
                     </div>
                 </div>
@@ -84,7 +84,7 @@ $content = '
                         <div class="card-body">
                             <h5 class="card-title">Bursa → Ankara</h5>
                             <p class="card-text text-muted">40₺\'den başlayan fiyatlarla</p>
-                            <a href="/search?departure_city=Bursa&arrival_city=Ankara&departure_date=' . date('Y-m-d') . '" class="btn btn-outline-primary btn-sm">Bilet Ara</a>
+                            <a href="/search?departure_city=Bursa&arrival_city=Ankara&departure_date=' . date('Y-m-d', strtotime('+1 day')) . '" class="btn btn-outline-primary btn-sm">Bilet Ara</a>
                         </div>
                     </div>
                 </div>
