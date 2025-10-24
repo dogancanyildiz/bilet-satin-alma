@@ -200,9 +200,9 @@ function purchaseTripTicket(
 
             $userCouponStmt = $pdo->prepare("SELECT COUNT(*) FROM user_coupons WHERE coupon_id = ? AND user_id = ?");
             $userCouponStmt->execute([$coupon['id'], $userId]);
-            if ($userCouponStmt->fetchColumn() > 0) {
+            if ((int)$userCouponStmt->fetchColumn() > 0) {
                 $pdo->rollBack();
-                return ['success' => false, 'message' => 'Bu kuponu zaten kullandınız.'];
+                return ['success' => false, 'message' => 'Bu kuponu zaten kullandınız. Aktif bileti iptal ederseniz kupon hakkı geri gelir.'];
             }
 
             $discountAmount = round($tripPrice * (float)$coupon['discount'], 2);
