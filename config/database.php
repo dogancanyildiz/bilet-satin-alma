@@ -105,6 +105,8 @@ function initializeDatabase() {
         )");
         ensureCouponExtendedSchema($pdo);
         ensureBookedSeatsSchema($pdo);
+        ensureTripsSchema($pdo);
+        ensureTicketsSchema($pdo);
 
         // User Coupons tablosu - Kullanıcıların kullandığı kuponlar
         $pdo->exec("CREATE TABLE IF NOT EXISTS user_coupons (
@@ -277,6 +279,34 @@ function resetDatabase() {
 /**
  * Booked seats tablosu için şema güncelleyici
  */
+
+function ensureTicketsSchema(PDO $pdo) {
+    try {
+        $columns = $pdo->query("PRAGMA table_info(tickets)")->fetchAll(PDO::FETCH_ASSOC);
+        $columnNames = array_column($columns, 'name');
+
+        if (!in_array('original_price', $columnNames, true)) {
+            $pdo->exec("ALTER TABLE tickets ADD COLUMN original_price DECIMAL DEFAULT 0");
+            $pdo->exec("UPDATE tickets SET original_price = total_price WHERE original_price = 0");
+        }
+        if (!in_array('discount_amount', $columnNames, true)) {
+            $pdo->exec("ALTER TABLE tickets ADD COLUMN discount_amount DECIMAL DEFAULT 0");
+        }
+        if (!in_array('coupon_code', $columnNames, true)) {
+            $pdo->exec("ALTER TABLE tickets ADD COLUMN coupon_code TEXT");
+        }
+        if (!in_array('passenger_name', $columnNames, true)) {
+            $pdo->exec("ALTER TABLE tickets ADD COLUMN passenger_name TEXT DEFAULT ''");
+            $pdo->exec("UPDATE tickets SET passenger_name = '' WHERE passenger_name IS NULL");
+        }
+        if (!in_array('passenger_tc', $columnNames, true)) {
+            $pdo->exec("ALTER TABLE tickets ADD COLUMN passenger_tc TEXT");
+        }
+    } catch (PDOException $e) {
+        error_log('Tickets schema update error: ' . $e->getMessage());
+    }
+}
+
 function ensureBookedSeatsSchema(PDO $pdo) {
     try {
         $columns = $pdo->query("PRAGMA table_info(booked_seats)")->fetchAll(PDO::FETCH_ASSOC);
@@ -292,5 +322,75 @@ function ensureBookedSeatsSchema(PDO $pdo) {
         $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_booked_trip_seat ON booked_seats(trip_id, seat_number)");
     } catch (PDOException $e) {
         error_log('Booked seats schema update error: ' . $e->getMessage());
+    }
+}
+
+function ensureTripsSchema(PDO $pdo) {
+    try {
+        $columns = $pdo->query("PRAGMA table_info(trips)")->fetchAll(PDO::FETCH_ASSOC);
+        $columnNames = array_column($columns, 'name');
+
+        if (!in_array('route_id', $columnNames, true)) {
+            $pdo->exec("ALTER TABLE trips ADD COLUMN route_id TEXT");
+            $columns = $pdo->query("PRAGMA table_info(trips)")->fetchAll(PDO::FETCH_ASSOC);
+            $columnNames = array_column($columns, 'name');
+        }
+
+        if (!in_array('status', $columnNames, true)) {
+            $pdo->exec("ALTER TABLE trips ADD COLUMN status TEXT DEFAULT 'scheduled'");
+            $pdo->exec("UPDATE trips SET status = 'scheduled' WHERE status IS NULL");
+        }
+
+        $hasDeparture = in_array('departure_city', $columnNames, true);
+        $hasDestination = in_array('destination_city', $columnNames, true);
+        if (!$hasDeparture || !$hasDestination || !in_array('route_id', $columnNames, true)) {
+            return;
+        }
+
+        $trips = $pdo->query("SELECT id, company_id, route_id, departure_city, destination_city, price, departure_time, arrival_time FROM trips")
+            ->fetchAll(PDO::FETCH_ASSOC);
+
+        $routeSelect = $pdo->prepare("SELECT id FROM routes WHERE company_id = ? AND departure_city = ? AND arrival_city = ? LIMIT 1");
+        $routeInsert = $pdo->prepare(
+            "INSERT INTO routes (id, departure_city, arrival_city, company_id, estimated_duration, base_price, status) VALUES (?, ?, ?, ?, ?, ?, 'active')"
+        );
+        $tripUpdate = $pdo->prepare("UPDATE trips SET route_id = ? WHERE id = ?");
+
+        foreach ($trips as $trip) {
+            if (!empty($trip['route_id'])) {
+                continue;
+            }
+            if (empty($trip['departure_city']) || empty($trip['destination_city'])) {
+                continue;
+            }
+
+            $routeSelect->execute([$trip['company_id'], $trip['departure_city'], $trip['destination_city']]);
+            $routeId = $routeSelect->fetchColumn();
+
+            if (!$routeId) {
+                $routeId = 'route_' . uniqid();
+                $duration = 120;
+                if (!empty($trip['departure_time']) && !empty($trip['arrival_time'])) {
+                    $dep = DateTime::createFromFormat('Y-m-d H:i:s', $trip['departure_time']);
+                    $arr = DateTime::createFromFormat('Y-m-d H:i:s', $trip['arrival_time']);
+                    if ($dep && $arr && $arr > $dep) {
+                        $duration = max(1, (int)(($arr->getTimestamp() - $dep->getTimestamp()) / 60));
+                    }
+                }
+                $basePrice = !empty($trip['price']) ? (float)$trip['price'] : 100;
+                $routeInsert->execute([
+                    $routeId,
+                    $trip['departure_city'],
+                    $trip['destination_city'],
+                    $trip['company_id'],
+                    $duration,
+                    $basePrice
+                ]);
+            }
+
+            $tripUpdate->execute([$routeId, $trip['id']]);
+        }
+    } catch (PDOException $e) {
+        error_log('Trips schema update error: ' . $e->getMessage());
     }
 }

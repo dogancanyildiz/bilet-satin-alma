@@ -1,6 +1,14 @@
 <?php
 // Ana sayfa view
 $title = 'Ana Sayfa - Bilet Platformu';
+$cities = [
+    'İstanbul',
+    'Ankara',
+    'İzmir',
+    'Bursa',
+    'Antalya'
+];
+
 $content = '
 <div class="hero-section">
     <div class="container text-center">
@@ -14,11 +22,11 @@ $content = '
                     <div class="row g-3">
                         <div class="col-md-3">
                             <label class="form-label text-dark">Nereden</label>
-                            <input type="text" class="form-control" name="departure_city" placeholder="Şehir seçin" required>
+                            <input list="city-options" class="form-control" name="departure_city" placeholder="Şehir seçin" required>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label text-dark">Nereye</label>
-                            <input type="text" class="form-control" name="arrival_city" placeholder="Şehir seçin" required>
+                            <input list="city-options" class="form-control" name="arrival_city" placeholder="Şehir seçin" required>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label text-dark">Gidiş</label>
@@ -165,6 +173,13 @@ $content = '
     </div>
 </div>
 ';
+
+$datalistOptions = '';
+foreach ($cities as $cityOption) {
+    $datalistOptions .= '<option value="' . htmlspecialchars($cityOption, ENT_QUOTES, 'UTF-8') . '"></option>';
+}
+
+$content = str_replace('</form>', '<datalist id="city-options">' . $datalistOptions . '</datalist></form>', $content);
 
 include 'layout.php';
 ?>
