@@ -369,6 +369,7 @@ $router->addRoute('GET', '/admin-panel', function() {
     $companies = getAllCompaniesWithStats();
     $companyAdmins = getCompanyAdmins();
     $coupons = getAllCouponsDetailed();
+    $csrfToken = generateCSRFToken();
     include __DIR__ . '/../views/admin_panel.php';
 });
 
@@ -555,6 +556,7 @@ $router->addRoute('GET', '/company-panel', function() {
     $routes = getCompanyRoutes($companyId);
     $trips = getCompanyTrips($companyId);
     $coupons = getCompanyCoupons($companyId);
+    $csrfToken = generateCSRFToken();
     include __DIR__ . '/../views/company_panel.php';
 });
 

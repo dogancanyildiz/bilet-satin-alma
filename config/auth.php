@@ -6,6 +6,11 @@
 
 // Only start session if not already started
 if (session_status() === PHP_SESSION_NONE) {
+    $isSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443);
+    ini_set('session.cookie_httponly', '1');
+    ini_set('session.cookie_samesite', 'Strict');
+    ini_set('session.cookie_secure', $isSecure ? '1' : '0');
     session_start();
 }
 
@@ -21,6 +26,7 @@ function login($email, $password) {
         
         if ($user && password_verify($password, $user['password'])) {
             // Session bilgilerini ayarla
+            session_regenerate_id(true);
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_email'] = $user['email'];
             $_SESSION['user_role'] = $user['role'];

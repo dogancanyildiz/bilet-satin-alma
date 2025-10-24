@@ -36,7 +36,6 @@ $formatDateTimeLocal = static function (?string $value): string {
     return $dt ? $dt->format('Y-m-d\TH:i') : '';
 };
 
-$csrfToken = generateCSRFToken();
 $routeOptions = array_map(static function ($route) {
     return [
         'id' => $route['id'],
@@ -95,7 +94,7 @@ ob_start();
         <div class="card-body">
             <h6 class="fw-semibold mb-3"><i class="fas fa-plus-circle me-2"></i>Yeni Rota Ekle</h6>
             <form action="/company/routes/create" method="POST" class="row g-3 mb-4">
-                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                 <div class="col-md-3">
                     <label class="form-label">Kalkış Şehri</label>
                     <input type="text" name="departure_city" class="form-control" required>
@@ -151,7 +150,7 @@ ob_start();
                                     <td><?= $createdAt ? $createdAt->format('d.m.Y H:i') : '' ?></td>
                                     <td>
                                         <form action="/company/routes/update" method="POST" class="row g-2 align-items-end mb-2">
-                                            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                                             <input type="hidden" name="route_id" value="<?= htmlspecialchars($route['id']) ?>">
                                             <div class="col-md-3">
                                                 <label class="form-label small">Kalkış</label>
@@ -183,7 +182,7 @@ ob_start();
                                             </div>
                                         </form>
                                         <form action="/company/routes/delete" method="POST" onsubmit="return confirm('Bu rotayı silmek istediğinize emin misiniz?');">
-                                            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                                             <input type="hidden" name="route_id" value="<?= htmlspecialchars($route['id']) ?>">
                                             <button type="submit" class="btn btn-sm btn-outline-danger">
                                                 <i class="fas fa-trash me-1"></i>Sil
@@ -210,7 +209,7 @@ ob_start();
                 <div class="alert alert-warning mb-4">Sefer ekleyebilmek için önce en az bir rota oluşturmalısınız.</div>
             <?php else: ?>
                 <form action="/company/trips/create" method="POST" class="row g-3 mb-4">
-                    <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                     <div class="col-md-3">
                         <label class="form-label">Rota</label>
                         <select name="route_id" class="form-select" required>
@@ -276,7 +275,7 @@ ob_start();
                                     </td>
                                     <td>
                                         <form action="/company/trips/update" method="POST" class="row g-2 align-items-end mb-2">
-                                            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                                             <input type="hidden" name="trip_id" value="<?= htmlspecialchars($trip['id']) ?>">
                                             <div class="col-md-3">
                                                 <label class="form-label small">Rota</label>
@@ -320,7 +319,7 @@ ob_start();
                                             </div>
                                         </form>
                                         <form action="/company/trips/delete" method="POST" onsubmit="return confirm('Bu seferi silmek istediğinize emin misiniz?');">
-                                            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                                             <input type="hidden" name="trip_id" value="<?= htmlspecialchars($trip['id']) ?>">
                                             <button type="submit" class="btn btn-sm btn-outline-danger">
                                                 <i class="fas fa-trash me-1"></i>Sil
@@ -378,7 +377,7 @@ ob_start();
         <div class="card-body">
             <h6 class="fw-semibold mb-3"><i class="fas fa-plus-circle me-2"></i>Yeni Kupon Ekle</h6>
             <form action="/company/coupons/create" method="POST" class="row g-3 mb-4">
-                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                 <div class="col-md-3">
                     <label class="form-label">Kupon Kodu</label>
                     <input type="text" name="code" class="form-control" maxlength="20" required>
@@ -427,7 +426,7 @@ ob_start();
                                     <td><?= (int)($coupon['usage_count'] ?? 0) ?></td>
                                     <td>
                                         <form action="/company/coupons/update" method="POST" class="row g-2 align-items-end mb-2">
-                                            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                                             <input type="hidden" name="coupon_id" value="<?= htmlspecialchars($coupon['id']) ?>">
                                             <div class="col-md-3">
                                                 <label class="form-label small">İndirim</label>
@@ -448,7 +447,7 @@ ob_start();
                                             </div>
                                         </form>
                                         <form action="/company/coupons/delete" method="POST" onsubmit="return confirm('Bu kuponu silmek istediğinize emin misiniz?');">
-                                            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                                             <input type="hidden" name="coupon_id" value="<?= htmlspecialchars($coupon['id']) ?>">
                                             <button type="submit" class="btn btn-sm btn-outline-danger">
                                                 <i class="fas fa-trash me-1"></i>Sil

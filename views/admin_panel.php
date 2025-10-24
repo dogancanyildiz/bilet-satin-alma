@@ -7,8 +7,6 @@ $coupons = $coupons ?? [];
 $totalCompanies = count($companies);
 $totalAdmins = count($companyAdmins);
 $totalCoupons = count($coupons);
-$csrfToken = generateCSRFToken();
-
 ob_start();
 ?>
 <div class="container py-4">
@@ -37,7 +35,7 @@ ob_start();
                     <div class="card-body">
                         <h6 class="fw-semibold mb-3"><i class="fas fa-plus-circle me-2"></i>Yeni Firma Oluştur</h6>
                         <form action="/admin/companies/create" method="POST" class="row g-2">
-                            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                             <div class="col-md-8">
                                 <label class="form-label">Firma Adı</label>
                                 <input type="text" name="name" class="form-control" required>
@@ -58,7 +56,7 @@ ob_start();
                     <div class="card-body">
                         <h6 class="fw-semibold mb-3"><i class="fas fa-user-plus me-2"></i>Yeni Firma Admini</h6>
                         <form action="/admin/company-admin/create" method="POST" class="row g-2">
-                            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                             <div class="col-md-6">
                                 <label class="form-label">Ad Soyad</label>
                                 <input type="text" name="full_name" class="form-control" required>
@@ -99,7 +97,7 @@ ob_start();
             <div class="card-body">
                 <h6 class="fw-semibold mb-3"><i class="fas fa-gift me-2"></i>Global Kupon Oluştur</h6>
                 <form action="/admin/coupons/create" method="POST" class="row g-3">
-                    <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                     <div class="col-md-3">
                         <label class="form-label">Kupon Kodu</label>
                         <input type="text" name="code" class="form-control" maxlength="20" required>
@@ -193,7 +191,7 @@ ob_start();
                                     <td><?= $createdAt ? $createdAt->format('d.m.Y H:i') : '' ?></td>
                                     <td>
                                         <form action="/admin/companies/update" method="POST" class="row g-2 align-items-end mb-2">
-                                            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                                             <input type="hidden" name="company_id" value="<?= htmlspecialchars($company['id']) ?>">
                                             <div class="col-md-8">
                                                 <label class="form-label small">Firma Adı</label>
@@ -206,7 +204,7 @@ ob_start();
                                             </div>
                                         </form>
                                         <form action="/admin/companies/delete" method="POST" onsubmit="return confirm('Bu firmayı silmek istediğinize emin misiniz?');">
-                                            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                                             <input type="hidden" name="company_id" value="<?= htmlspecialchars($company['id']) ?>">
                                             <button type="submit" class="btn btn-sm btn-outline-danger">
                                                 <i class="fas fa-trash me-1"></i>Sil
@@ -256,7 +254,7 @@ ob_start();
                                     <td><?= $assignedAt ? $assignedAt->format('d.m.Y H:i') : '' ?></td>
                                     <td>
                                         <form action="/admin/company-admin/update" method="POST" class="row g-2 align-items-end mb-2">
-                                            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                                             <input type="hidden" name="user_id" value="<?= htmlspecialchars($admin['id']) ?>">
                                             <div class="col-md-3">
                                                 <label class="form-label small">Ad Soyad</label>
@@ -287,7 +285,7 @@ ob_start();
                                             </div>
                                         </form>
                                         <form action="/admin/company-admin/delete" method="POST" onsubmit="return confirm('Bu firma adminini silmek istediğinize emin misiniz?');">
-                                            <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                                             <input type="hidden" name="user_id" value="<?= htmlspecialchars($admin['id']) ?>">
                                             <button type="submit" class="btn btn-sm btn-outline-danger">
                                                 <i class="fas fa-trash me-1"></i>Sil
@@ -346,7 +344,7 @@ ob_start();
                                     <td>
                                         <?php if ((int)$coupon['is_global'] === 1): ?>
                                             <form action="/admin/coupons/update" method="POST" class="row g-2 align-items-end mb-2">
-                                                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                                                 <input type="hidden" name="coupon_id" value="<?= htmlspecialchars($coupon['id']) ?>">
                                                 <div class="col-md-3">
                                                     <label class="form-label small">İndirim</label>
@@ -367,7 +365,7 @@ ob_start();
                                                 </div>
                                             </form>
                                             <form action="/admin/coupons/delete" method="POST" onsubmit="return confirm('Bu kuponu silmek istediğinize emin misiniz?');">
-                                                <input type="hidden" name="csrf_token" value="<?= $csrfToken ?>">
+                                                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
                                                 <input type="hidden" name="coupon_id" value="<?= htmlspecialchars($coupon['id']) ?>">
                                                 <button type="submit" class="btn btn-sm btn-outline-danger">
                                                     <i class="fas fa-trash me-1"></i>Sil
