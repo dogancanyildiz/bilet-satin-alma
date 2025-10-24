@@ -134,7 +134,8 @@ $router->addRoute('GET', '/search', function() {
 
     $dateObj = DateTime::createFromFormat('Y-m-d', $departureDate);
     $dateErrors = DateTime::getLastErrors();
-    if (!$dateObj || $dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0) {
+    $hasDateErrors = is_array($dateErrors) && ($dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0);
+    if (!$dateObj || $hasDateErrors) {
         $_SESSION['error'] = 'Departure date must be a valid date.';
         header('Location: /');
         exit;
