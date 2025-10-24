@@ -372,6 +372,163 @@ $router->addRoute('GET', '/admin-panel', function() {
     include __DIR__ . '/../views/admin_panel.php';
 });
 
+$router->addRoute('POST', '/admin/companies/create', function() {
+    requireAuth();
+    requireRole('admin');
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: /admin-panel');
+        exit;
+    }
+
+    $name = $_POST['name'] ?? '';
+    $result = createCompany($name);
+    $_SESSION[$result['success'] ? 'success' : 'error'] = $result['message'];
+    header('Location: /admin-panel');
+    exit;
+});
+
+$router->addRoute('POST', '/admin/companies/update', function() {
+    requireAuth();
+    requireRole('admin');
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: /admin-panel');
+        exit;
+    }
+
+    $companyId = $_POST['company_id'] ?? '';
+    $name = $_POST['name'] ?? '';
+    $result = updateCompany($companyId, $name);
+    $_SESSION[$result['success'] ? 'success' : 'error'] = $result['message'];
+    header('Location: /admin-panel');
+    exit;
+});
+
+$router->addRoute('POST', '/admin/companies/delete', function() {
+    requireAuth();
+    requireRole('admin');
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: /admin-panel');
+        exit;
+    }
+
+    $companyId = $_POST['company_id'] ?? '';
+    $result = deleteCompany($companyId);
+    $_SESSION[$result['success'] ? 'success' : 'error'] = $result['message'];
+    header('Location: /admin-panel');
+    exit;
+});
+
+$router->addRoute('POST', '/admin/company-admin/create', function() {
+    requireAuth();
+    requireRole('admin');
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: /admin-panel');
+        exit;
+    }
+
+    $companyId = $_POST['company_id'] ?? '';
+    $fullName = $_POST['full_name'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $password = $_POST['password'] ?? '';
+
+    $result = createCompanyAdmin($fullName, $email, $password, $companyId);
+    $_SESSION[$result['success'] ? 'success' : 'error'] = $result['message'];
+    header('Location: /admin-panel');
+    exit;
+});
+
+$router->addRoute('POST', '/admin/company-admin/update', function() {
+    requireAuth();
+    requireRole('admin');
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: /admin-panel');
+        exit;
+    }
+
+    $userId = $_POST['user_id'] ?? '';
+    $result = updateCompanyAdmin($userId, $_POST);
+    $_SESSION[$result['success'] ? 'success' : 'error'] = $result['message'];
+    header('Location: /admin-panel');
+    exit;
+});
+
+$router->addRoute('POST', '/admin/company-admin/delete', function() {
+    requireAuth();
+    requireRole('admin');
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: /admin-panel');
+        exit;
+    }
+
+    $userId = $_POST['user_id'] ?? '';
+    $result = deleteCompanyAdmin($userId);
+    $_SESSION[$result['success'] ? 'success' : 'error'] = $result['message'];
+    header('Location: /admin-panel');
+    exit;
+});
+
+$router->addRoute('POST', '/admin/coupons/create', function() {
+    requireAuth();
+    requireRole('admin');
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: /admin-panel');
+        exit;
+    }
+
+    $result = createGlobalCoupon($_POST);
+    $_SESSION[$result['success'] ? 'success' : 'error'] = $result['message'];
+    header('Location: /admin-panel');
+    exit;
+});
+
+$router->addRoute('POST', '/admin/coupons/update', function() {
+    requireAuth();
+    requireRole('admin');
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: /admin-panel');
+        exit;
+    }
+
+    $couponId = $_POST['coupon_id'] ?? '';
+    $result = updateGlobalCoupon($couponId, $_POST);
+    $_SESSION[$result['success'] ? 'success' : 'error'] = $result['message'];
+    header('Location: /admin-panel');
+    exit;
+});
+
+$router->addRoute('POST', '/admin/coupons/delete', function() {
+    requireAuth();
+    requireRole('admin');
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: /admin-panel');
+        exit;
+    }
+
+    $couponId = $_POST['coupon_id'] ?? '';
+    $result = deleteCoupon($couponId);
+    $_SESSION[$result['success'] ? 'success' : 'error'] = $result['message'];
+    header('Location: /admin-panel');
+    exit;
+});
+
 $router->addRoute('GET', '/company-panel', function() {
     requireAuth();
     requireRole('company_admin');
@@ -399,6 +556,230 @@ $router->addRoute('GET', '/company-panel', function() {
     $trips = getCompanyTrips($companyId);
     $coupons = getCompanyCoupons($companyId);
     include __DIR__ . '/../views/company_panel.php';
+});
+
+// Company admin actions
+$router->addRoute('POST', '/company/routes/create', function() {
+    requireAuth();
+    requireRole('company_admin');
+
+    $currentUser = getCurrentUser();
+    $companyId = $currentUser['company_id'] ?? null;
+    if (!$companyId) {
+        $_SESSION['error'] = 'Firma bilgisi bulunamadı.';
+        header('Location: /company-panel');
+        exit;
+    }
+
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: /company-panel');
+        exit;
+    }
+
+    $result = createCompanyRoute($companyId, $_POST);
+    $_SESSION[$result['success'] ? 'success' : 'error'] = $result['message'];
+    header('Location: /company-panel');
+    exit;
+});
+
+$router->addRoute('POST', '/company/routes/update', function() {
+    requireAuth();
+    requireRole('company_admin');
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: /company-panel');
+        exit;
+    }
+
+    $currentUser = getCurrentUser();
+    $companyId = $currentUser['company_id'] ?? null;
+    $routeId = $_POST['route_id'] ?? '';
+    if (!$companyId || $routeId === '') {
+        $_SESSION['error'] = 'Rota bilgisi eksik.';
+        header('Location: /company-panel');
+        exit;
+    }
+
+    $result = updateCompanyRoute($companyId, $routeId, $_POST);
+    $_SESSION[$result['success'] ? 'success' : 'error'] = $result['message'];
+    header('Location: /company-panel');
+    exit;
+});
+
+$router->addRoute('POST', '/company/routes/delete', function() {
+    requireAuth();
+    requireRole('company_admin');
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: /company-panel');
+        exit;
+    }
+
+    $currentUser = getCurrentUser();
+    $companyId = $currentUser['company_id'] ?? null;
+    $routeId = $_POST['route_id'] ?? '';
+    if (!$companyId || $routeId === '') {
+        $_SESSION['error'] = 'Rota bilgisi eksik.';
+        header('Location: /company-panel');
+        exit;
+    }
+
+    $result = deleteCompanyRoute($companyId, $routeId);
+    $_SESSION[$result['success'] ? 'success' : 'error'] = $result['message'];
+    header('Location: /company-panel');
+    exit;
+});
+
+$router->addRoute('POST', '/company/trips/create', function() {
+    requireAuth();
+    requireRole('company_admin');
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: /company-panel');
+        exit;
+    }
+
+    $currentUser = getCurrentUser();
+    $companyId = $currentUser['company_id'] ?? null;
+    if (!$companyId) {
+        $_SESSION['error'] = 'Firma bilgisi bulunamadı.';
+        header('Location: /company-panel');
+        exit;
+    }
+
+    $result = createCompanyTrip($companyId, $_POST);
+    $_SESSION[$result['success'] ? 'success' : 'error'] = $result['message'];
+    header('Location: /company-panel');
+    exit;
+});
+
+$router->addRoute('POST', '/company/trips/update', function() {
+    requireAuth();
+    requireRole('company_admin');
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: /company-panel');
+        exit;
+    }
+
+    $currentUser = getCurrentUser();
+    $companyId = $currentUser['company_id'] ?? null;
+    $tripId = $_POST['trip_id'] ?? '';
+    if (!$companyId || $tripId === '') {
+        $_SESSION['error'] = 'Sefer bilgisi eksik.';
+        header('Location: /company-panel');
+        exit;
+    }
+
+    $result = updateCompanyTrip($companyId, $tripId, $_POST);
+    $_SESSION[$result['success'] ? 'success' : 'error'] = $result['message'];
+    header('Location: /company-panel');
+    exit;
+});
+
+$router->addRoute('POST', '/company/trips/delete', function() {
+    requireAuth();
+    requireRole('company_admin');
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: /company-panel');
+        exit;
+    }
+
+    $currentUser = getCurrentUser();
+    $companyId = $currentUser['company_id'] ?? null;
+    $tripId = $_POST['trip_id'] ?? '';
+    if (!$companyId || $tripId === '') {
+        $_SESSION['error'] = 'Sefer bilgisi eksik.';
+        header('Location: /company-panel');
+        exit;
+    }
+
+    $result = deleteCompanyTrip($companyId, $tripId);
+    $_SESSION[$result['success'] ? 'success' : 'error'] = $result['message'];
+    header('Location: /company-panel');
+    exit;
+});
+
+$router->addRoute('POST', '/company/coupons/create', function() {
+    requireAuth();
+    requireRole('company_admin');
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: /company-panel');
+        exit;
+    }
+
+    $currentUser = getCurrentUser();
+    $companyId = $currentUser['company_id'] ?? null;
+    if (!$companyId) {
+        $_SESSION['error'] = 'Firma bilgisi bulunamadı.';
+        header('Location: /company-panel');
+        exit;
+    }
+
+    $result = createCompanyCoupon($companyId, $_POST);
+    $_SESSION[$result['success'] ? 'success' : 'error'] = $result['message'];
+    header('Location: /company-panel');
+    exit;
+});
+
+$router->addRoute('POST', '/company/coupons/update', function() {
+    requireAuth();
+    requireRole('company_admin');
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: /company-panel');
+        exit;
+    }
+
+    $currentUser = getCurrentUser();
+    $companyId = $currentUser['company_id'] ?? null;
+    $couponId = $_POST['coupon_id'] ?? '';
+    if (!$companyId || $couponId === '') {
+        $_SESSION['error'] = 'Kupon bilgisi eksik.';
+        header('Location: /company-panel');
+        exit;
+    }
+
+    $result = updateCompanyCoupon($companyId, $couponId, $_POST);
+    $_SESSION[$result['success'] ? 'success' : 'error'] = $result['message'];
+    header('Location: /company-panel');
+    exit;
+});
+
+$router->addRoute('POST', '/company/coupons/delete', function() {
+    requireAuth();
+    requireRole('company_admin');
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: /company-panel');
+        exit;
+    }
+
+    $currentUser = getCurrentUser();
+    $companyId = $currentUser['company_id'] ?? null;
+    $couponId = $_POST['coupon_id'] ?? '';
+    if (!$companyId || $couponId === '') {
+        $_SESSION['error'] = 'Kupon bilgisi eksik.';
+        header('Location: /company-panel');
+        exit;
+    }
+
+    $result = deleteCompanyCoupon($companyId, $couponId);
+    $_SESSION[$result['success'] ? 'success' : 'error'] = $result['message'];
+    header('Location: /company-panel');
+    exit;
 });
 
 $router->dispatch();
