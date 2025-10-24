@@ -139,7 +139,7 @@ $router->addRoute('GET', '/search', function() {
         exit;
     }
 
-    $trips = searchTrips($departureCity, $arrivalCity, $departureDate);
+    $trips = searchTrips($departureCity, $arrivalCity, $departureDate, $passengerCount);
     $searchParams = [
         'departure_city' => $departureCity,
         'arrival_city' => $arrivalCity,
@@ -165,7 +165,108 @@ $router->addRoute('GET', '/trip', function() {
         return;
     }
 
+    $bookedSeats = getTripBookedSeats($tripId);
+    $currentUser = getCurrentUser();
     include __DIR__ . '/../views/trip_detail.php';
+});
+
+$router->addRoute('POST', '/trip/book', function() {
+    requireAuth();
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: ' . ($_SERVER['HTTP_REFERER'] ?? '/'));
+        exit;
+    }
+
+    $tripId = isset($_POST['trip_id']) ? trim($_POST['trip_id']) : '';
+    $seatNumber = isset($_POST['seat_number']) ? (int)$_POST['seat_number'] : 0;
+    $passengerName = isset($_POST['passenger_name']) ? trim($_POST['passenger_name']) : '';
+    $passengerTc = isset($_POST['passenger_tc']) ? trim($_POST['passenger_tc']) : null;
+    $couponCode = isset($_POST['coupon_code']) ? trim($_POST['coupon_code']) : null;
+
+    $redirectToTrip = '/trip?id=' . urlencode($tripId);
+
+    $currentUser = getCurrentUser();
+    if (!$tripId) {
+        $_SESSION['error'] = 'Geçersiz sefer bilgisi.';
+        header('Location: /');
+        exit;
+    }
+
+    if (!$currentUser || $currentUser['role'] !== 'user') {
+        $_SESSION['error'] = 'Bilet satın almak için yolcu hesabı ile giriş yapmalısınız.';
+        header('Location: ' . $redirectToTrip);
+        exit;
+    }
+
+    if ($passengerName === '') {
+        $_SESSION['error'] = 'Yolcu adı zorunludur.';
+        $_SESSION['booking_form'] = [
+            'seat_number' => $seatNumber,
+            'passenger_name' => $passengerName,
+            'passenger_tc' => $passengerTc,
+            'coupon_code' => $couponCode
+        ];
+        header('Location: ' . $redirectToTrip);
+        exit;
+    }
+
+    if ($seatNumber <= 0) {
+        $_SESSION['error'] = 'Lütfen bir koltuk seçin.';
+        $_SESSION['booking_form'] = [
+            'seat_number' => $seatNumber,
+            'passenger_name' => $passengerName,
+            'passenger_tc' => $passengerTc,
+            'coupon_code' => $couponCode
+        ];
+        header('Location: ' . $redirectToTrip);
+        exit;
+    }
+
+    if ($passengerTc !== null && $passengerTc !== '') {
+        $passengerTcDigits = preg_replace('/\D+/', '', $passengerTc);
+        if (strlen($passengerTcDigits) !== 11) {
+            $_SESSION['error'] = 'Yolcu TC kimlik numarası 11 haneli olmalıdır.';
+            $_SESSION['booking_form'] = [
+                'seat_number' => $seatNumber,
+                'passenger_name' => $passengerName,
+                'passenger_tc' => $passengerTc,
+                'coupon_code' => $couponCode
+            ];
+            header('Location: ' . $redirectToTrip);
+            exit;
+        }
+        $passengerTc = $passengerTcDigits;
+    } else {
+        $passengerTc = null;
+    }
+
+    $result = purchaseTripTicket(
+        $tripId,
+        $currentUser['id'],
+        $seatNumber,
+        $passengerName,
+        $passengerTc,
+        $couponCode ?: null
+    );
+
+    if ($result['success']) {
+        unset($_SESSION['booking_form']);
+        $_SESSION['success'] = 'Bilet satın alındı. Ödenen tutar: ' . number_format($result['total_price'], 2) . ' ₺';
+        header('Location: /my-tickets');
+        exit;
+    }
+
+    $_SESSION['error'] = $result['message'];
+    $_SESSION['booking_form'] = [
+        'seat_number' => $seatNumber,
+        'passenger_name' => $passengerName,
+        'passenger_tc' => $passengerTc,
+        'coupon_code' => $couponCode
+    ];
+    header('Location: ' . $redirectToTrip);
+    exit;
 });
 
 $router->addRoute('GET', '/logout', function() {

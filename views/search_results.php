@@ -74,9 +74,18 @@ ob_start();
                         </div>
 
                         <div class="text-lg-end">
-                            <a href="/trip?id=<?= urlencode($trip['id']) ?>" class="btn btn-primary">
-                                <i class="fas fa-info-circle me-1"></i> Detay
-                            </a>
+                            <?php if ((int)$trip['available_seats'] > 0): ?>
+                                <a href="/trip?id=<?= urlencode($trip['id']) ?>" class="btn btn-primary">
+                                    <i class="fas fa-info-circle me-1"></i> Detay
+                                </a>
+                            <?php else: ?>
+                                <span class="badge bg-secondary mb-2">Sefer Dolu</span>
+                                <div>
+                                    <a href="/trip?id=<?= urlencode($trip['id']) ?>" class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-eye me-1"></i> İncele
+                                    </a>
+                                </div>
+                            <?php endif; ?>
                             <?php if (!isLoggedIn()): ?>
                                 <small class="d-block text-muted mt-2">
                                     Satın almak için giriş yapın

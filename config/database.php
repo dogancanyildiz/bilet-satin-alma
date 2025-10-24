@@ -83,9 +83,11 @@ function initializeDatabase() {
         // Booked Seats tablosu - Rezerve edilmiş koltuklar
         $pdo->exec("CREATE TABLE IF NOT EXISTS booked_seats (
             id TEXT PRIMARY KEY,
+            trip_id TEXT NOT NULL,
             ticket_id TEXT NOT NULL,
             seat_number INTEGER NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (trip_id) REFERENCES trips(id),
             FOREIGN KEY (ticket_id) REFERENCES tickets(id)
         )");
 
@@ -102,6 +104,7 @@ function initializeDatabase() {
             FOREIGN KEY (company_id) REFERENCES bus_company(id)
         )");
         ensureCouponExtendedSchema($pdo);
+        ensureBookedSeatsSchema($pdo);
 
         // User Coupons tablosu - Kullanıcıların kullandığı kuponlar
         $pdo->exec("CREATE TABLE IF NOT EXISTS user_coupons (
@@ -118,8 +121,11 @@ function initializeDatabase() {
         $pdo->exec("CREATE INDEX IF NOT EXISTS idx_trips_departure ON trips(departure_time)");
         $pdo->exec("CREATE INDEX IF NOT EXISTS idx_routes_departure_arrival ON routes(departure_city, arrival_city)");
         $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_booked_seats_unique ON booked_seats(ticket_id, seat_number)");
+        $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_booked_trip_seat ON booked_seats(trip_id, seat_number)");
         $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_coupons_code ON coupons(code)");
         $pdo->exec("CREATE INDEX IF NOT EXISTS idx_coupons_company ON coupons(company_id)");
+
+        insertSampleData();
 
         return true;
     } catch (PDOException $e) {
@@ -134,58 +140,89 @@ function initializeDatabase() {
 function insertSampleData() {
     try {
         $pdo = db();
-        
+
         // Admin kullanıcısı oluştur
-        $adminId = 'admin_' . uniqid();
-        $pdo->prepare("INSERT OR IGNORE INTO users (id, full_name, email, role, password, balance) 
-                      VALUES (?, 'System Admin', 'admin@test.com', 'admin', ?, 10000)")
-            ->execute([$adminId, password_hash('123456', PASSWORD_DEFAULT)]);
+        $adminStmt = $pdo->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+        $adminStmt->execute(['admin@test.com']);
+        if (!$adminStmt->fetchColumn()) {
+            $adminId = 'admin_' . uniqid();
+            $pdo->prepare("INSERT INTO users (id, full_name, email, role, password, balance) 
+                           VALUES (?, 'System Admin', 'admin@test.com', 'admin', ?, 10000)")
+                ->execute([$adminId, password_hash('123456', PASSWORD_DEFAULT)]);
+        }
 
         // Örnek otobüs firması
-        $companyId = 'company_' . uniqid();
-        $pdo->prepare("INSERT OR IGNORE INTO bus_company (id, name) VALUES (?, 'Metro Turizm')")
-            ->execute([$companyId]);
+        $companyStmt = $pdo->prepare("SELECT id FROM bus_company WHERE name = ? LIMIT 1");
+        $companyStmt->execute(['Metro Turizm']);
+        $companyId = $companyStmt->fetchColumn();
+        if (!$companyId) {
+            $companyId = 'company_' . uniqid();
+            $pdo->prepare("INSERT INTO bus_company (id, name) VALUES (?, 'Metro Turizm')")
+                ->execute([$companyId]);
+        }
 
         // Örnek rota
-        $routeId = 'route_' . uniqid();
-        $pdo->prepare("INSERT OR IGNORE INTO routes (id, departure_city, arrival_city, company_id, estimated_duration, base_price) 
-                      VALUES (?, 'İstanbul', 'Ankara', ?, 270, 150.00)")
-            ->execute([$routeId, $companyId]);
+        $routeStmt = $pdo->prepare("SELECT id FROM routes WHERE departure_city = ? AND arrival_city = ? AND company_id = ? LIMIT 1");
+        $routeStmt->execute(['İstanbul', 'Ankara', $companyId]);
+        $routeId = $routeStmt->fetchColumn();
+        if (!$routeId) {
+            $routeId = 'route_' . uniqid();
+            $pdo->prepare("INSERT INTO routes (id, departure_city, arrival_city, company_id, estimated_duration, base_price) 
+                           VALUES (?, 'İstanbul', 'Ankara', ?, 270, 150.00)")
+                ->execute([$routeId, $companyId]);
+        }
 
         // Firma admin kullanıcısı
-        $companyAdminId = 'comp_admin_' . uniqid();
-        $pdo->prepare("INSERT OR IGNORE INTO users (id, full_name, email, role, password, company_id, balance) 
-                      VALUES (?, 'Metro Admin', 'company@test.com', 'company_admin', ?, ?, 5000)")
-            ->execute([$companyAdminId, password_hash('123456', PASSWORD_DEFAULT), $companyId]);
+        $companyAdminStmt = $pdo->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+        $companyAdminStmt->execute(['company@test.com']);
+        if (!$companyAdminStmt->fetchColumn()) {
+            $companyAdminId = 'comp_admin_' . uniqid();
+            $pdo->prepare("INSERT INTO users (id, full_name, email, role, password, company_id, balance) 
+                           VALUES (?, 'Metro Admin', 'company@test.com', 'company_admin', ?, ?, 5000)")
+                ->execute([$companyAdminId, password_hash('123456', PASSWORD_DEFAULT), $companyId]);
+        }
 
         // Örnek kullanıcı
-        $userId = 'user_' . uniqid();
-        $pdo->prepare("INSERT OR IGNORE INTO users (id, full_name, email, role, password, balance) 
-                      VALUES (?, 'Ahmet Yılmaz', 'user@test.com', 'user', ?, 1000)")
-            ->execute([$userId, password_hash('123456', PASSWORD_DEFAULT)]);
+        $userStmt = $pdo->prepare("SELECT id FROM users WHERE email = ? LIMIT 1");
+        $userStmt->execute(['user@test.com']);
+        if (!$userStmt->fetchColumn()) {
+            $userId = 'user_' . uniqid();
+            $pdo->prepare("INSERT INTO users (id, full_name, email, role, password, balance) 
+                           VALUES (?, 'Ahmet Yılmaz', 'user@test.com', 'user', ?, 1000)")
+                ->execute([$userId, password_hash('123456', PASSWORD_DEFAULT)]);
+        }
 
         // Örnek sefer
-        $tripId = 'trip_' . uniqid();
-        $pdo->prepare("INSERT OR IGNORE INTO trips (id, route_id, company_id, departure_time, arrival_time, price, capacity) 
-                      VALUES (?, ?, ?, ?, ?, 160.00, 40)")
-            ->execute([
-                $tripId,
-                $routeId,
-                $companyId,
-                date('Y-m-d H:i:s', strtotime('+1 day 09:00')),
-                date('Y-m-d H:i:s', strtotime('+1 day 13:30'))
-            ]);
+        $departureDate = date('Y-m-d', strtotime('+1 day'));
+        $tripCheck = $pdo->prepare("SELECT id FROM trips WHERE route_id = ? AND DATE(departure_time) = ? LIMIT 1");
+        $tripCheck->execute([$routeId, $departureDate]);
+        if (!$tripCheck->fetchColumn()) {
+            $tripId = 'trip_' . uniqid();
+            $departureTime = $departureDate . ' 09:00:00';
+            $arrivalTime = $departureDate . ' 13:30:00';
+            $pdo->prepare("INSERT INTO trips (id, route_id, company_id, departure_time, arrival_time, price, capacity) 
+                           VALUES (?, ?, ?, ?, ?, 160.00, 40)")
+                ->execute([$tripId, $routeId, $companyId, $departureTime, $arrivalTime]);
+        }
 
         // Örnek kupon
-        $globalCouponId = 'coupon_' . uniqid();
-        $pdo->prepare("INSERT OR IGNORE INTO coupons (id, code, discount, usage_limit, expire_date, company_id, is_global) 
-                      VALUES (?, 'HOSGELDIN20', 0.20, 100, ?, NULL, 1)")
-            ->execute([$globalCouponId, date('Y-m-d H:i:s', strtotime('+30 days'))]);
+        $couponStmt = $pdo->prepare("SELECT id FROM coupons WHERE code = ? LIMIT 1");
+        $couponStmt->execute(['HOSGELDIN20']);
+        if (!$couponStmt->fetchColumn()) {
+            $globalCouponId = 'coupon_' . uniqid();
+            $pdo->prepare("INSERT INTO coupons (id, code, discount, usage_limit, expire_date, company_id, is_global) 
+                           VALUES (?, 'HOSGELDIN20', 0.20, 100, ?, NULL, 1)")
+                ->execute([$globalCouponId, date('Y-m-d H:i:s', strtotime('+30 days'))]);
+        }
 
-        $companyCouponId = 'coupon_' . uniqid();
-        $pdo->prepare("INSERT OR IGNORE INTO coupons (id, code, discount, usage_limit, expire_date, company_id, is_global) 
-                      VALUES (?, 'METRO10', 0.10, 50, ?, ?, 0)")
-            ->execute([$companyCouponId, date('Y-m-d H:i:s', strtotime('+20 days')), $companyId]);
+        $companyCouponStmt = $pdo->prepare("SELECT id FROM coupons WHERE code = ? LIMIT 1");
+        $companyCouponStmt->execute(['METRO10']);
+        if (!$companyCouponStmt->fetchColumn()) {
+            $companyCouponId = 'coupon_' . uniqid();
+            $pdo->prepare("INSERT INTO coupons (id, code, discount, usage_limit, expire_date, company_id, is_global) 
+                           VALUES (?, 'METRO10', 0.10, 50, ?, ?, 0)")
+                ->execute([$companyCouponId, date('Y-m-d H:i:s', strtotime('+20 days')), $companyId]);
+        }
 
         return true;
     } catch (PDOException $e) {
@@ -235,5 +272,26 @@ function resetDatabase() {
     } catch (PDOException $e) {
         error_log("Database reset error: " . $e->getMessage());
         return false;
+    }
+}
+
+/**
+ * Booked seats tablosu için şema güncelleyici
+ */
+function ensureBookedSeatsSchema(PDO $pdo) {
+    try {
+        $columns = $pdo->query("PRAGMA table_info(booked_seats)")->fetchAll(PDO::FETCH_ASSOC);
+        $columnNames = array_column($columns, 'name');
+
+        if (!in_array('trip_id', $columnNames, true)) {
+            $pdo->exec("ALTER TABLE booked_seats ADD COLUMN trip_id TEXT");
+            $pdo->exec("UPDATE booked_seats SET trip_id = (
+                SELECT tickets.trip_id FROM tickets WHERE tickets.id = booked_seats.ticket_id
+            ) WHERE trip_id IS NULL");
+        }
+
+        $pdo->exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_booked_trip_seat ON booked_seats(trip_id, seat_number)");
+    } catch (PDOException $e) {
+        error_log('Booked seats schema update error: ' . $e->getMessage());
     }
 }
