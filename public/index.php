@@ -9,6 +9,7 @@ require_once __DIR__ . '/../config/admin.php';
 require_once __DIR__ . '/../config/company.php';
 require_once __DIR__ . '/../config/ticket.php';
 require_once __DIR__ . '/../config/trip.php';
+require_once __DIR__ . '/../config/pdf.php';
 
 initializeDatabase();
 
@@ -267,6 +268,70 @@ $router->addRoute('POST', '/trip/book', function() {
     ];
     header('Location: ' . $redirectToTrip);
     exit;
+});
+
+$router->addRoute('POST', '/ticket/cancel', function() {
+    requireAuth();
+    $csrfToken = $_POST['csrf_token'] ?? '';
+    if (!verifyCSRFToken($csrfToken)) {
+        $_SESSION['error'] = 'Güvenlik doğrulaması başarısız oldu. Lütfen tekrar deneyin.';
+        header('Location: /my-tickets');
+        exit;
+    }
+
+    $ticketId = isset($_POST['ticket_id']) ? trim($_POST['ticket_id']) : '';
+    if ($ticketId === '') {
+        $_SESSION['error'] = 'Geçersiz bilet bilgisi.';
+        header('Location: /my-tickets');
+        exit;
+    }
+
+    $currentUser = getCurrentUser();
+    $result = cancelTicket($ticketId, $currentUser);
+
+    if ($result['success']) {
+        $_SESSION['success'] = $result['message'];
+    } else {
+        $_SESSION['error'] = $result['message'];
+    }
+
+    header('Location: /my-tickets');
+    exit;
+});
+
+$router->addRoute('GET', '/ticket/pdf', function() {
+    requireAuth();
+    $ticketId = isset($_GET['id']) ? trim($_GET['id']) : '';
+    if ($ticketId === '') {
+        $_SESSION['error'] = 'Geçersiz bilet bilgisi.';
+        header('Location: /my-tickets');
+        exit;
+    }
+
+    $currentUser = getCurrentUser();
+    $ticket = getTicketDetails($ticketId);
+
+    if (!$ticket) {
+        http_response_code(404);
+        $_SESSION['error'] = 'Bilet bulunamadı.';
+        header('Location: /my-tickets');
+        exit;
+    }
+
+    $isOwner = $ticket['user_id'] === $currentUser['id'];
+    $isAdmin = $currentUser['role'] === 'admin';
+    $isCompanyAdmin = $currentUser['role'] === 'company_admin' && $currentUser['company_id'] === ($ticket['company_id'] ?? null);
+
+    if (!($isOwner || $isAdmin || $isCompanyAdmin)) {
+        $_SESSION['error'] = 'Bu bileti görüntülemeye yetkiniz yok.';
+        header('Location: /my-tickets');
+        exit;
+    }
+
+    $owner = getUserById($ticket['user_id']) ?? $currentUser;
+    output_ticket_pdf($ticket, [
+        'name' => $owner['full_name'] ?? ($owner['name'] ?? ''),
+    ]);
 });
 
 $router->addRoute('GET', '/logout', function() {

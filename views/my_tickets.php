@@ -58,6 +58,15 @@ ob_start();
                             ];
                             $badgeClass = $statusBadge[$ticket['status']] ?? 'secondary';
                             $statusLabel = $statusLabels[$ticket['status']] ?? ucfirst($ticket['status']);
+                            $now = new DateTime();
+                            $oneHourAhead = (clone $now)->modify('+1 hour');
+                            $canCancel = $ticket['status'] === 'active' && $departureTime && $departureTime > $oneHourAhead;
+                            $cancelHint = '';
+                            if ($ticket['status'] !== 'active') {
+                                $cancelHint = 'Bilet durumu iptale uygun değil.';
+                            } elseif ($departureTime && $departureTime <= $oneHourAhead) {
+                                $cancelHint = 'Kalkışa 1 saatten az kaldı.';
+                            }
                         ?>
                         <tr>
                             <td>
@@ -82,18 +91,36 @@ ob_start();
                             </td>
                             <td><?= $purchaseTime ? $purchaseTime->format('d.m.Y H:i') : '' ?></td>
                             <td class="text-end">
-                                <button class="btn btn-outline-secondary btn-sm" disabled>
-                                    <i class="fas fa-file-pdf me-1"></i> PDF (Yakında)
-                                </button>
+                                <div class="d-flex flex-wrap justify-content-end gap-2">
+                                    <a class="btn btn-outline-secondary btn-sm" href="/ticket/pdf?id=<?= urlencode($ticket['id']) ?>">
+                                        <i class="fas fa-file-pdf me-1"></i> PDF İndir
+                                    </a>
+                                    <?php if ($canCancel): ?>
+                                        <form action="/ticket/cancel" method="POST" class="m-0" onsubmit="return confirm('Bu bileti iptal etmek istediğinize emin misiniz?');">
+                                            <input type="hidden" name="csrf_token" value="<?= generateCSRFToken() ?>">
+                                            <input type="hidden" name="ticket_id" value="<?= htmlspecialchars($ticket['id']) ?>">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                <i class="fas fa-ban me-1"></i> İptal Et
+                                            </button>
+                                        </form>
+                                    <?php elseif ($ticket['status'] === 'active'): ?>
+                                        <button class="btn btn-outline-secondary btn-sm" disabled title="<?= htmlspecialchars($cancelHint) ?>">
+                                            <i class="fas fa-ban me-1"></i> İptal Edilemez
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
+                                <?php if ($cancelHint && !$canCancel && $ticket['status'] === 'active'): ?>
+                                    <small class="text-muted d-block mt-1"><?= htmlspecialchars($cancelHint) ?></small>
+                                <?php endif; ?>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
-        <div class="alert alert-warning mt-3">
+        <div class="alert alert-info mt-3">
             <i class="fas fa-hourglass-half me-2"></i>
-            Bilet iptali ve PDF indirme özellikleri geliştirme aşamasındadır.
+            PDF bilet çıktısı özelliği yakında eklenecektir.
         </div>
     <?php endif; ?>
 </div>

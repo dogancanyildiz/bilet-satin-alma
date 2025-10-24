@@ -266,7 +266,6 @@ function resetDatabase() {
         
         // Yeniden oluştur
         initializeDatabase();
-        insertSampleData();
         
         return true;
     } catch (PDOException $e) {
